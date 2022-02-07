@@ -168,6 +168,19 @@ export class Utils implements BaseUtils {
       .sign(pair);
 
     // Serialize a signed transaction.
+    return this.serializeSignedTransaction(transaction, signature, metadataRpc, registry);
+  }
+
+  /**
+   * Serializes the signed transaction
+   *
+   * @param transaction Transaction to serialize
+   * @param signature Signature of the message
+   * @param metadataRpc Network metadata
+   * @param registry Transaction registry
+   * @returns string Serialized transaction
+   */
+  serializeSignedTransaction(transaction, signature, metadataRpc: `0x${string}`, registry): string {
     return construct.signedTx(transaction, signature, {
       metadataRpc,
       registry,
@@ -251,6 +264,17 @@ export class Utils implements BaseUtils {
       signature = signature.substr(2);
     }
     return signature;
+  }
+
+  /**
+   * Decodes the dot address from the given format
+   *
+   * @param {string} address
+   * @param {number} [ss58Format]
+   * @returns {KeyPair}
+   */
+  decodeDotAddressToKeyPair(address: string, ss58Format?: number): KeyPair {
+    return new KeyPair({ pub: Buffer.from(decodeAddress(address, undefined, ss58Format)).toString('hex') });
   }
 }
 
