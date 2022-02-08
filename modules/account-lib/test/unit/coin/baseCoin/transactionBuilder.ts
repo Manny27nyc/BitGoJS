@@ -62,4 +62,54 @@ describe('Transaction builder', () => {
     sandbox.assert.calledOnce(validateTransaction);
     sandbox.assert.calledOnce(buildImplementation);
   });
+
+  it('should verify validity window params', () => {
+    const testTx = sinon.createStubInstance(TestTransaction);
+    testTx.canSign.returns(true);
+    txBuilder.from(testTx);
+    txBuilder.build();
+    let validityWindow;
+
+    let params = {};
+    should(() => txBuilder.getValidityWindow(params)).throwError('Unit parameter needed');
+
+    params = {
+      firstValid: 10,
+      lastValid: 23,
+      minDuration: 10,
+      maxDuration: 20,
+      unit: '',
+    };
+    should(() => txBuilder.getValidityWindow(params)).throwError('Unit parameter needed');
+
+    params = {
+      firstValid: 10,
+      lastValid: 11,
+      minDuration: 10,
+      maxDuration: 20,
+      unit: 'timestamp',
+    };
+    validityWindow = txBuilder.getValidityWindow(params);
+    validityWindow.should.have.properties(['firstValid', 'lastValid', 'minDuration', 'maxDuration', 'unit']);
+    validityWindow.firstValid.should.be.equal(10);
+    validityWindow.lastValid.should.be.equal(30);
+    validityWindow.minDuration.should.be.equal(10);
+    validityWindow.maxDuration.should.be.equal(20);
+    validityWindow.unit.should.be.equal('timestamp');
+
+    params = {
+      firstValid: 10,
+      lastValid: 23,
+      minDuration: 10,
+      maxDuration: 5,
+      unit: 'blockheight',
+    };
+    validityWindow = txBuilder.getValidityWindow(params);
+    validityWindow.should.have.properties(['firstValid', 'lastValid', 'minDuration', 'maxDuration', 'unit']);
+    validityWindow.firstValid.should.be.equal(10);
+    validityWindow.lastValid.should.be.equal(20);
+    validityWindow.minDuration.should.be.equal(10);
+    validityWindow.maxDuration.should.be.equal(10);
+    validityWindow.unit.should.be.equal('blockheight');
+  });
 });

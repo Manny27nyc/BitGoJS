@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { BaseCoin as CoinConfig } from '@bitgo/statics';
-import { BaseAddress, BaseKey, PublicKey } from './iface';
+import { BaseAddress, BaseKey, PublicKey, ValidityWindow } from './iface';
 import { BaseTransaction } from './baseTransaction';
 import { SigningError } from './errors';
 
@@ -138,6 +138,51 @@ export abstract class BaseTransactionBuilder {
    */
   coinName(): string {
     return this._coinConfig.name;
+  }
+
+  /**
+   * Verified validity windows params if them exist and return a valid validity windows.
+   * Unit param must be specified
+   * If params are not consistent, default params will be return based on firstValid and minDuration
+   * @param {ValidityWindow} params validity windows parameters to validate.
+   * @param {String} params.unit Parameter that could be 'blockheght' or 'timestamp'
+   * @param {Number} [params.minDuration] Optional - Minimum duration of the window
+   * @param {Number} [params.maxDuration] Optional - Maximum duration of the window
+   * @param {Number} [params.firstValid] Optional - First valid value
+   * @param {Number} [params.lastValid] Optional - Last valid value
+   * @returns {ValidityWindow} verified validity windows or default values
+   */
+  getValidityWindow(params: ValidityWindow): ValidityWindow {
+    const defaultDuration = 100000;
+    const window: ValidityWindow = params;
+
+    // If any params exist, they will be used, otherwise it will be used default params.
+    window.firstValid = window.firstValid ? window.firstValid : 0;
+    window.lastValid = window.lastValid ? window.lastValid : defaultDuration;
+    window.minDuration = window.minDuration ? window.minDuration : 0;
+    window.maxDuration = window.maxDuration ? window.maxDuration : defaultDuration;
+    window.unit = window.unit;
+    if (!window.unit || (window.unit !== 'timestamp' && window.unit !== 'blockheight')) {
+      throw new Error('Unit parameter needed');
+    }
+
+    // If maxDuration is lower than minDuration then it is assigned minDuration as default
+    if (window.minDuration > window.maxDuration) {
+      window.maxDuration = window.minDuration;
+    }
+    /* Validate that lastValid is grather than firstValid + minDuration and lower than firstValid + maxDuration
+      firstValid + minDuration < lastValid < first valid + maxDuration
+      If not, it is assigned as firstValid + minDuration by  default
+    */
+    if (
+      window.lastValid <= window.firstValid ||
+      window.lastValid < window.firstValid + window.minDuration ||
+      window.lastValid >= window.firstValid + window.maxDuration ||
+      window.firstValid + window.minDuration > window.firstValid + window.maxDuration
+    ) {
+      window.lastValid = window.firstValid + window.maxDuration;
+    }
+    return window;
   }
 
   /**
