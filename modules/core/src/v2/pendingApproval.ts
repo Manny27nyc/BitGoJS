@@ -8,6 +8,7 @@ import { RequestTracer } from './internal/util';
 
 import { Wallet } from './wallet';
 import { BaseCoin } from './baseCoin';
+import { TssUtils } from './internal/tssUtils';
 
 export interface PendingApprovalInfo {
   type: Type;
@@ -61,11 +62,13 @@ export interface ApproveOptions {
   otp?: string;
   tx?: string;
   xprv?: string;
+  txRequestId?: string;
 }
 
 export class PendingApproval {
   private readonly bitgo: BitGo;
   private readonly baseCoin: BaseCoin;
+  private tssUtils: TssUtils;
   private wallet?: Wallet;
   private _pendingApproval: PendingApprovalData;
 
@@ -73,6 +76,7 @@ export class PendingApproval {
     this.bitgo = bitgo;
     this.baseCoin = baseCoin;
     this.wallet = wallet;
+    this.tssUtils = new TssUtils(this.bitgo, this.baseCoin, wallet);
     this._pendingApproval = pendingApprovalData;
   }
 
@@ -256,6 +260,10 @@ export class PendingApproval {
 
         this.bitgo.setRequestTracer(reqId);
         await this.populateWallet();
+
+        if (params.txRequestId) {
+          return await this.recreateAndSignTSSTransaction(params, reqId);
+        }
         return await this.recreateAndSignTransaction(params);
       }
     };
@@ -305,6 +313,34 @@ export class PendingApproval {
    */
   async cancel(params: Record<string, never> = {}): Promise<any> {
     return await this.reject(params);
+  }
+
+  /**
+   * Recreate and sign TSS transaction
+   * @param {ApproveOptions} params needed to get txs and use the walletPassphrase to tss sign
+   * @param {RequestTracer} reqId id tracer.
+   */
+  async recreateAndSignTSSTransaction(params: ApproveOptions, reqId: RequestTracer): Promise<{ txHex: string }> {
+    const { txRequestId, walletPassphrase } = params;
+
+    if (!this.wallet) {
+      throw new Error('Wallet not found');
+    }
+
+    if (!walletPassphrase) {
+      throw new Error('walletPassphrase not found');
+    }
+
+    if (!txRequestId) {
+      throw new Error('txRequestId not found');
+    }
+
+    const { decryptedPrv } = await this.wallet.getPrv({ walletPassphrase });
+
+    const txRequest = await this.tssUtils.recreateTxRequest(txRequestId, decryptedPrv, reqId);
+    return {
+      txHex: txRequest.unsignedTxs[0].serializedTxHex,
+    };
   }
 
   /**
