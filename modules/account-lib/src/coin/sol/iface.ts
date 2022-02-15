@@ -4,6 +4,7 @@ import {
   StakeInstructionType,
   SystemInstructionType,
   TransactionSignature,
+  Signer,
 } from '@solana/web3.js';
 import { InstructionBuilderTypes } from './constants';
 import { TransactionExplanation as BaseTransactionExplanation } from '../baseCoin/iface';
