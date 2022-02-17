@@ -26,7 +26,7 @@ import { BuildTransactionError, NotSupported, ParseTransactionError, UtilsError 
 import { ValidInstructionTypes } from './iface';
 import nacl from 'tweetnacl';
 import * as Crypto from './../../utils/crypto';
-import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
+const splToken = require('@solana/spl-token');
 import { BaseCoin, BaseNetwork, coins } from '@bitgo/statics';
 import { SolCoin } from '@bitgo/statics/dist/src/account';
 import assert from 'assert';
@@ -265,7 +265,7 @@ export function getInstructionType(instruction: TransactionInstruction): ValidIn
       return SystemInstruction.decodeInstructionType(instruction);
     case StakeProgram.programId.toString():
       return StakeInstruction.decodeInstructionType(instruction);
-    case ASSOCIATED_TOKEN_PROGRAM_ID.toString():
+    case splToken.ASSOCIATED_TOKEN_PROGRAM_ID.toString():
       // TODO: change this when @spl-token supports decoding associated token instructions
       if (instruction.data.length === 0) {
         return 'InitializeAssociatedTokenAccount';

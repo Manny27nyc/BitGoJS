@@ -114,10 +114,16 @@ function parseSendInstructions(instructions: TransactionInstruction[]): Array<No
         instructionData.push(nonce);
         break;
       case ValidInstructionTypesEnum.Transfer:
-        let transferInstruction = splToken.decodeTransferCheckedInstruction();
-
+        let transferInstruction;
+        let isToken = false;
+        try {
+          transferInstruction = splToken.decodeTransferCheckedInstruction(instruction);
+          isToken = true;
+        } catch (e) {
+          transferInstruction = SystemInstruction.decodeTransfer(instruction);
+        }
         let transfer: Transfer;
-        if (transferInstruction.keys.mint) {
+        if (isToken) {
           transfer = {
             type: InstructionBuilderTypes.Transfer,
             params: {
@@ -130,7 +136,6 @@ function parseSendInstructions(instructions: TransactionInstruction[]): Array<No
             },
           };
         } else {
-          transferInstruction = SystemInstruction.decodeTransfer(instruction);
           transfer = {
             type: InstructionBuilderTypes.Transfer,
             params: {
