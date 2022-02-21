@@ -6,8 +6,6 @@ import * as bip32 from 'bip32';
 import * as Keccak from 'keccak';
 import * as secp256k1 from 'secp256k1';
 import * as _ from 'lodash';
-// import * as debugLib from 'debug';
-
 import {
   BaseCoin,
   FeeEstimateOptions,
@@ -21,7 +19,6 @@ import {
   VerifyAddressOptions,
   VerifyTransactionOptions,
   TransactionFee,
-  // TransactionRecipient,
   TransactionPrebuild as BaseTransactionPrebuild,
   TransactionExplanation,
   TransactionRecipient,
@@ -37,8 +34,6 @@ import * as common from '../../common';
 import { optionalDeps } from './eth';
 import { Erc20Token } from './erc20Token';
 import { Wallet } from '../wallet';
-
-// const debug = debugLib('bitgo:v2:avaxc');
 
 // For explainTransaction
 export interface ExplainTransactionOptions {
@@ -158,6 +153,7 @@ export interface TxPreBuild extends BaseTransactionPrebuild {
   nextContractSequenceId?: string;
   expireTime?: number;
   hopTransaction?: string;
+  eip1559?: { maxPriorityFeePerGas: number; maxFeePerGas: number };
 }
 
 // For signTransaction
@@ -194,11 +190,6 @@ export class AvaxC extends BaseCoin {
   static createInstance(bitgo: BitGo, staticsCoin?: Readonly<StaticsBaseCoin>): BaseCoin {
     return new AvaxC(bitgo, staticsCoin);
   }
-
-  // static buildTransaction() : {
-  //
-  //
-  // }
 
   getBaseFactor(): number {
     return Math.pow(10, this._staticsCoin.decimalPlaces);
@@ -313,15 +304,6 @@ export class AvaxC extends BaseCoin {
           'batch transaction amount in txPrebuild received from BitGo servers does not match txParams supplied by client'
         );
       }
-
-      // // Check batch transaction is sent to the batcher contract address for the chain
-      // const batcherContractAddress = ethNetwork?.batcherContractAddress;
-      // if (
-      //   !batcherContractAddress ||
-      //   batcherContractAddress.toLowerCase() !== txPrebuild.recipients[0].address.toLowerCase()
-      // ) {
-      //   throw new Error('recipient address of txPrebuild does not match batcher address');
-      // }
     } else {
       // Check recipient address and amount for normal transaction
       if (txParams.recipients.length !== 1) {
@@ -522,6 +504,7 @@ export class AvaxC extends BaseCoin {
       recipients: recipients,
       expiration: params.txPrebuild.expireTime,
       hopTransaction: params.txPrebuild.hopTransaction,
+      eip1599: params.txPrebuild.eip1559,
     };
 
     return { halfSigned: txParams };

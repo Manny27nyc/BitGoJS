@@ -6,6 +6,7 @@ import * as bip32 from 'bip32';
 import { Wallet } from '../../../../src';
 import * as nock from 'nock';
 import * as common from '../../../../src/common';
+import {coins} from "@bitgo/statics";
 
 nock.enableNetConnect();
 
@@ -548,58 +549,39 @@ describe('Avalanche C-Chain', function () {
     });
   });
 
-  // it('should reject a batch txPrebuild from the bitgo server with the wrong total amount', async function () {
-  //   const coin = bitgo.coin('teth');
-  //   const wallet = new Wallet(bitgo, coin, {});
-  //
-  //   const txParams = {
-  //     recipients: [{ amount: '1000000000000', address: address1 }, { amount: '2500000000000', address: address2 }],
-  //     wallet: wallet,
-  //     walletPassphrase: 'fakeWalletPassphrase',
-  //   };
-  //
-  //   const txPrebuild = {
-  //     recipients: [{ amount: '5500000000000', address: coin.staticsCoin.network.batcherContractAddress }],
-  //     nextContractSequenceId: 0,
-  //     gasPrice: 20000000000,
-  //     gasLimit: 500000,
-  //     isBatch: true,
-  //     coin: 'teth',
-  //     walletId: 'fakeWalletId',
-  //     walletContractAddress: 'fakeWalletContractAddress',
-  //   };
-  //
-  //   const verification = {};
-  //
-  //   await coin.verifyTransaction({ txParams, txPrebuild, wallet, verification })
-  //       .should.be.rejectedWith('batch transaction amount in txPrebuild received from BitGo servers does not match txParams supplied by client');
-  // });
-  //
-  // it('should reject a batch txPrebuild from the bitgo server that does not send to the batcher contract address', async function () {
-  //   const coin = bitgo.coin('teth');
-  //   const wallet = new Wallet(bitgo, coin, {});
-  //
-  //   const txParams = {
-  //     recipients: [{ amount: '1000000000000', address: address1 }, { amount: '2500000000000', address: address2 }],
-  //     wallet: wallet,
-  //     walletPassphrase: 'fakeWalletPassphrase',
-  //   };
-  //
-  //   const txPrebuild = {
-  //     recipients: [{ amount: '3500000000000', address: hopContractAddress }],
-  //     nextContractSequenceId: 0,
-  //     gasPrice: 20000000000,
-  //     gasLimit: 500000,
-  //     isBatch: true,
-  //     coin: 'teth',
-  //     walletId: 'fakeWalletId',
-  //     walletContractAddress: 'fakeWalletContractAddress',
-  //   };
-  //
-  //   const verification = {};
-  //
-  //   await coin.verifyTransaction({ txParams, txPrebuild, wallet, verification })
-  //       .should.be.rejectedWith('recipient address of txPrebuild does not match batcher address');
-  // });
+  describe('EIP1559', function () {
+    it('should sign a transaction with EIP1559 fee params', async function () {
 
+      const userKeychain = {
+        prv: 'xprv9s21ZrQH143K3hekyNj7TciR4XNYe1kMj68W2ipjJGNHETWP7o42AjDnSPgKhdZ4x8NBAvaL72RrXjuXNdmkMqLERZza73oYugGtbLFXG8g',
+        pub: 'xpub661MyMwAqRbcGBjE5QG7pkf9cZD33UUD6K46q7ELrbuG7FqXfLNGiXYGHeEnGBb5AWREnk1eA28g8ArZvURbhshXWkTtddHRo54fgyVvLdb',
+        rawPub: '023636e68b7b204573abda2616aff6b584910dece2543f1cc6d842caac7d74974b',
+        rawPrv: '7438a50010ce7b1dfd86e68046cc78ba1ebd242d6d85d9904d3fcc08734bc172',
+      };
+
+      const halfSignedTransaction = await tavaxCoin.signTransaction({
+        txPrebuild: {
+          eip1559: { maxPriorityFeePerGas: 10, maxFeePerGas: 10 },
+          isBatch: false,
+          recipients: [{
+            amount: '42',
+            address: '0xc93b13642d93b4218bb85f67317d6b37286e8028',
+          }],
+          expireTime: 1627949214,
+          contractSequenceId: 12,
+          gasLimit: undefined,
+          gasPrice: undefined,
+          hopTransaction: undefined,
+          backupKeyNonce: undefined,
+          sequenceId: undefined,
+          nextContractSequenceId: 0,
+        },
+        prv: userKeychain.prv,
+      });
+
+      halfSignedTransaction.halfSigned.eip1559.maxPriorityFeePerGas.should.equal(10);
+      halfSignedTransaction.halfSigned.eip1559.maxFeePerGas.should.equal(10);
+
+    });
+  });
 });
