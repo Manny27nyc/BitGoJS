@@ -2,6 +2,9 @@ import { register } from '../../../../../src';
 import { TransactionBuilderFactory, KeyPair, Utils } from '../../../../../src/coin/sol';
 import should from 'should';
 import * as testData from '../../../../resources/sol/sol';
+import { PublicKey } from '@solana/web3.js';
+const web3 = require('@solana/web3.js');
+const splToken = require('@solana/spl-token');
 
 describe('Sol Transfer Builder', () => {
   const factory = register('tsol', TransactionBuilderFactory);
@@ -20,6 +23,9 @@ describe('Sol Transfer Builder', () => {
   const recentBlockHash = 'GHtXQBsoZHVnNFa9YevAzFr17DJjgHXk3ycTKD5xD3Zi';
   const amount = '300000';
   const memo = 'test memo';
+  const mint = '9cgpBeNZ2HnLda7NWaaU1i3NyTstk2c4zCMUcoAGsi9C';
+  const source = 'FQ9UD9fnmbHbVU2QXFnLPCFL4ESDPyWVvjSztFyzF2p5';
+  const multiSigners = testData.tokenTransfers.multiSigners;
 
   describe('Succeed', () => {
     it('build a transfer tx unsigned with memo', async () => {
@@ -230,6 +236,45 @@ describe('Sol Transfer Builder', () => {
       const rawTx = tx.toBroadcastFormat();
       should.equal(Utils.isValidRawTransaction(rawTx), true);
       should.equal(rawTx, testData.MULTI_TRANSFER_SIGNED);
+    });
+
+    it('build a token transfer tx unsigned with memo', async () => {
+      /*
+      const tokenTransferTransaction = new web3.Transaction();
+      tokenTransferTransaction.add(
+        splToken.Token.createTransferCheckedInstruction(
+          splToken.TOKEN_PROGRAM_ID,
+          source,
+          mint,
+          otherAccount.pub,
+          authAccount.pub,
+          multiSigners,
+          amount,
+          9,
+        ),
+      );*/
+
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash);
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint, source, multiSigners });
+      txBuilder.memo(memo);
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(1);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol',
+      });
+      tx.outputs.length.should.equal(1);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.TRANSFER_UNSIGNED_TX_WITH_MEMO);
     });
   });
 

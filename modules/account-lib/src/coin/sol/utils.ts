@@ -263,6 +263,8 @@ export function getInstructionType(instruction: TransactionInstruction): ValidIn
       return 'Memo';
     case SystemProgram.programId.toString():
       return SystemInstruction.decodeInstructionType(instruction);
+    case splToken.TOKEN_PROGRAM_ID.toString():
+      return 'Transfer';
     case StakeProgram.programId.toString():
       return StakeInstruction.decodeInstructionType(instruction);
     case splToken.ASSOCIATED_TOKEN_PROGRAM_ID.toString():

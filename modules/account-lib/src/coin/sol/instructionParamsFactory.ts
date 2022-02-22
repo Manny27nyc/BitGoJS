@@ -117,7 +117,7 @@ function parseSendInstructions(instructions: TransactionInstruction[]): Array<No
         let transferInstruction;
         let isToken = false;
         try {
-          transferInstruction = splToken.decodeTransferCheckedInstruction(instruction);
+          transferInstruction = splToken.decodeTransferCheckedInstruction(instruction, splToken.TOKEN_PROGRAM_ID);
           isToken = true;
         } catch (e) {
           transferInstruction = SystemInstruction.decodeTransfer(instruction);

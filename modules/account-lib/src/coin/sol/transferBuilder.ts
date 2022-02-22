@@ -35,14 +35,12 @@ export class TransferBuilder extends TransactionBuilder {
     for (const instruction of this._instructionsData) {
       if (instruction.type === InstructionBuilderTypes.Transfer) {
         const transferInstruction: Transfer = instruction;
-
-        this.sender(transferInstruction.params.fromAddress);
         this.send({
           address: transferInstruction.params.toAddress,
           amount: transferInstruction.params.amount,
           mint: transferInstruction.params.mint || undefined,
           source: transferInstruction.params.source || undefined,
-          multiSigners: transferInstruction.params.multiSigners || undefined,
+          multiSigners: transferInstruction.params.multiSigners || [],
         });
       }
     }
@@ -56,14 +54,16 @@ export class TransferBuilder extends TransactionBuilder {
    * @param {string} amount - the amount sent
    * @returns {TransactionBuilder} This transaction builder
    */
-  send({ address, amount, mint }: SendParams): this {
+  send({ address, amount, mint, source, multiSigners }: SendParams): this {
     mint = mint || undefined;
+    source = source || undefined;
+    multiSigners = multiSigners || [];
     validateAddress(address, 'address');
     if (!amount || !isValidAmount(amount)) {
       throw new BuildTransactionError('Invalid or missing amount, got: ' + amount);
     }
 
-    this._sendParams.push({ address, amount, mint });
+    this._sendParams.push({ address, amount, mint, source, multiSigners });
 
     return this;
   }

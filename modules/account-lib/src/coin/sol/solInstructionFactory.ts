@@ -116,7 +116,7 @@ function transferInstruction(data: Transfer): TransactionInstruction[] {
     assert(mint, 'Missing mint');
     assert(source, 'Missing source');
     assert(multiSigners, 'Missing multiSigners');
-    transferInstruction = splToken.createTransferCheckedInstruction(
+    transferInstruction = splToken.Token.createTransferCheckedInstruction(
       splToken.TOKEN_PROGRAM_ID,
       new PublicKey(source),
       new PublicKey(mint),
