@@ -598,6 +598,7 @@ export class Wallet {
       'eip1559',
       'keyregTxBase64',
       'closeRemainderTo',
+      'material'
     ];
   }
 
