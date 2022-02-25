@@ -623,7 +623,11 @@ export class AvaxC extends BaseCoin {
       query.amount = params.amount;
     }
 
-    return await this.bitgo.get(this.url('/tx/fee')).query(query).result();
+    return {
+      gasLimitEstimate: 20000000,
+      feeEstimate: 287500000800000,
+    };
+    // return await this.bitgo.get(this.url('/tx/fee')).query(query).result();
   }
 
   /**
@@ -634,5 +638,9 @@ export class AvaxC extends BaseCoin {
     const hash = new Keccak('keccak256');
     hash.update([AvaxC.hopTransactionSalt, ...paramsArr].join('$'));
     return hash.digest();
+  }
+
+  isWalletAddress(params: VerifyAddressOptions): boolean {
+    return false;
   }
 }
