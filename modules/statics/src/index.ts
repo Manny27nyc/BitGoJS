@@ -13,5 +13,6 @@ export {
   EosCoin,
   AlgoCoin,
   AvaxERC20Token,
+  FiatCoin,
 } from './account';
 export { CoinMap } from './map';
