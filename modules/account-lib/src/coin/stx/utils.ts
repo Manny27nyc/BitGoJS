@@ -12,6 +12,7 @@ import {
   BufferReader,
   ClarityType,
   ClarityValue,
+  createAddress,
   createMemoString,
   createMessageSignature,
   createStacksPrivateKey,
@@ -469,4 +470,25 @@ export function functionArgsToSendParams(args: ClarityValue[]): SendParams[] {
       memo: tuple.data.memo.buffer.toString('ascii'),
     };
   });
+}
+
+/**
+ * Gets the version of an address
+ *
+ * @param {String} address the address with or without the memoId
+ * @returns {AddressVersion} A number that represent the Address Version
+ */
+export function getAddressVersion(address: string): AddressVersion {
+  const baseAddress = getAddressDetails(address).address;
+  return createAddress(baseAddress).version;
+}
+
+/**
+ * Returns a STX pub key from an xpub
+ *
+ * @param {String} xpub an xpub
+ * @returns {String} a compressed STX pub key
+ */
+export function xpubToSTXPubkey(xpub: string, compressed = true): string {
+  return new KeyPair({ pub: xpub }).getKeys(compressed).pub;
 }

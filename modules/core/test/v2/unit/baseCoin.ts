@@ -220,4 +220,12 @@ describe('V2 Base Coin:', function () {
     });
   });
 
+  describe('getBaseAddress', function () {
+    it('should return an unchanged address for non implemented coins', async function () {
+      const coin = bitgo.coin('tsol');
+      const address = 'randomAddress';
+      await coin.getBaseAddress(address).should.equal(address);
+    });
+  });
+
 });
