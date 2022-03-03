@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { BaseTransaction, TransactionType } from '../baseCoin';
-import { BaseCoin as CoinConfig } from '@bitgo/statics';
+import { BaseCoin as CoinConfig, coins } from '@bitgo/statics';
 import { InvalidTransactionError, ParseTransactionError, SigningError } from '../baseCoin/errors';
 import { Blockhash, PublicKey, Signer, SystemInstruction, Transaction as SolTransaction } from '@solana/web3.js';
 import {
@@ -20,6 +20,7 @@ import { KeyPair } from '.';
 import { instructionParamsFactory } from './instructionParamsFactory';
 import { InstructionBuilderTypes } from './constants';
 import { Entry, TransactionRecipient } from '../baseCoin/iface';
+import assert from 'assert';
 
 const UNAVAILABLE_TEXT = 'UNAVAILABLE';
 export class Transaction extends BaseTransaction {
@@ -241,16 +242,37 @@ export class Transaction extends BaseTransaction {
           });
           break;
         case InstructionBuilderTypes.Transfer:
-          inputs.push({
-            address: instruction.params.fromAddress,
-            value: instruction.params.amount,
-            coin: this._coinConfig.name,
-          });
-          outputs.push({
-            address: instruction.params.toAddress,
-            value: instruction.params.amount,
-            coin: this._coinConfig.name,
-          });
+          if (instruction.params.mint) {
+            let coin;
+            coins.forEach((value, key) => {
+              if (value['tokenAddress'] === instruction.params.mint) {
+                coin = value;
+              }
+            });
+            assert(coin);
+            inputs.push({
+              address: instruction.params.fromAddress,
+              value: instruction.params.amount,
+              coin: coin.name,
+            });
+            outputs.push({
+              address: instruction.params.toAddress,
+              value: instruction.params.amount,
+              coin: coin.name,
+            });
+          } else {
+            inputs.push({
+              address: instruction.params.fromAddress,
+              value: instruction.params.amount,
+              coin: this._coinConfig.name,
+            });
+            outputs.push({
+              address: instruction.params.toAddress,
+              value: instruction.params.amount,
+              coin: this._coinConfig.name,
+            });
+          }
+
           break;
         case InstructionBuilderTypes.StakingActivate:
           inputs.push({

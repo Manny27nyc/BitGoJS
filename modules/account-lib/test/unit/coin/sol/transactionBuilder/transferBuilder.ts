@@ -2,9 +2,6 @@ import { register } from '../../../../../src';
 import { TransactionBuilderFactory, KeyPair, Utils } from '../../../../../src/coin/sol';
 import should from 'should';
 import * as testData from '../../../../resources/sol/sol';
-import { PublicKey } from '@solana/web3.js';
-const web3 = require('@solana/web3.js');
-const splToken = require('@solana/spl-token');
 
 describe('Sol Transfer Builder', () => {
   const factory = register('tsol', TransactionBuilderFactory);
@@ -21,10 +18,12 @@ describe('Sol Transfer Builder', () => {
   const otherAccount = new KeyPair({ prv: testData.prvKeys.prvKey1.base58 }).getKeys();
   const invalidPubKey = testData.pubKeys.invalidPubKeys[0];
   const recentBlockHash = 'GHtXQBsoZHVnNFa9YevAzFr17DJjgHXk3ycTKD5xD3Zi';
-  const amount = '300000';
-  const memo = 'test memo';
-  const mint = '9cgpBeNZ2HnLda7NWaaU1i3NyTstk2c4zCMUcoAGsi9C';
-  const source = 'FQ9UD9fnmbHbVU2QXFnLPCFL4ESDPyWVvjSztFyzF2p5';
+  const amount = testData.tokenTransfers.amount.toString();
+  const memo = testData.tokenTransfers.memo;
+  const mintORCA = testData.tokenTransfers.mintORCA;
+  const mintUSDC = testData.tokenTransfers.mintUSDC;
+  const sourceORCA = testData.tokenTransfers.sourceORCA;
+  const sourceUSDC = testData.tokenTransfers.sourceUSDC;
   const multiSigners = testData.tokenTransfers.multiSigners;
 
   describe('Succeed', () => {
@@ -237,47 +236,217 @@ describe('Sol Transfer Builder', () => {
       should.equal(Utils.isValidRawTransaction(rawTx), true);
       should.equal(rawTx, testData.MULTI_TRANSFER_SIGNED);
     });
-
+    // token transfers
     it('build a token transfer tx unsigned with memo', async () => {
-      /*
-      const tokenTransferTransaction = new web3.Transaction();
-      tokenTransferTransaction.add(
-        splToken.Token.createTransferCheckedInstruction(
-          splToken.TOKEN_PROGRAM_ID,
-          source,
-          mint,
-          otherAccount.pub,
-          authAccount.pub,
-          multiSigners,
-          amount,
-          9,
-        ),
-      );*/
-
       const txBuilder = factory.getTransferBuilder();
       txBuilder.nonce(recentBlockHash);
       txBuilder.sender(authAccount.pub);
-      txBuilder.send({ address: otherAccount.pub, amount, mint, source, multiSigners });
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
       txBuilder.memo(memo);
       const tx = await txBuilder.build();
       tx.inputs.length.should.equal(1);
       tx.inputs[0].should.deepEqual({
         address: authAccount.pub,
         value: amount,
-        coin: 'tsol',
+        coin: 'tsol:ORCA',
       });
       tx.outputs.length.should.equal(1);
       tx.outputs[0].should.deepEqual({
         address: otherAccount.pub,
         value: amount,
-        coin: 'tsol',
+        coin: 'tsol:ORCA',
       });
       const rawTx = tx.toBroadcastFormat();
       should.equal(Utils.isValidRawTransaction(rawTx), true);
-      should.equal(rawTx, testData.TRANSFER_UNSIGNED_TX_WITH_MEMO);
+      should.equal(rawTx, testData.TOKEN_TRANSFER_UNSIGNED_TX_WITH_MEMO);
+    });
+
+    it('build a token transfer tx unsigned with durable nonce', async () => {
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash, { walletNonceAddress: nonceAccount.pub, authWalletAddress: authAccount.pub });
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(1);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs.length.should.equal(1);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.TOKEN_TRANSFER_UNSIGNED_TX_WITH_DURABLE_NONCE);
+      const txJson = tx.toJson();
+      txJson.durableNonce.should.deepEqual({
+        walletNonceAddress: nonceAccount.pub,
+        authWalletAddress: authAccount.pub,
+      });
+    });
+
+    it('build a token transfer tx unsigned with memo and durable nonce', async () => {
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash, { walletNonceAddress: nonceAccount.pub, authWalletAddress: authAccount.pub });
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      txBuilder.memo(memo);
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(1);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs.length.should.equal(1);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.TOKEN_TRANSFER_UNSIGNED_TX_WITH_MEMO_AND_DURABLE_NONCE);
+    });
+
+    it('build a token transfer tx unsigned without memo or durable nonce', async () => {
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash);
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(1);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs.length.should.equal(1);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.TOKEN_TRANSFER_UNSIGNED_TX_WITHOUT_MEMO);
+    });
+
+    it('build a token transfer tx signed with memo and durable nonce', async () => {
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash, { walletNonceAddress: nonceAccount.pub, authWalletAddress: authAccount.pub });
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      txBuilder.memo(memo);
+      txBuilder.sign({ key: authAccount.prv });
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(1);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs.length.should.equal(1);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.TOKEN_TRANSFER_SIGNED_TX_WITH_MEMO_AND_DURABLE_NONCE);
+    });
+
+    it('build a token multi transfer tx signed with memo and durable nonce', async () => {
+      const account1 = new KeyPair({ prv: testData.extraAccounts.prv1 }).getKeys();
+      const account2 = new KeyPair({ prv: testData.extraAccounts.prv2 }).getKeys();
+      const account3 = new KeyPair({ prv: testData.extraAccounts.prv3 }).getKeys();
+      const account4 = new KeyPair({ prv: testData.extraAccounts.prv4 }).getKeys();
+      const account5 = new KeyPair({ prv: testData.extraAccounts.prv5 }).getKeys();
+
+      const txBuilder = factory.getTransferBuilder();
+      txBuilder.nonce(recentBlockHash, { walletNonceAddress: nonceAccount.pub, authWalletAddress: authAccount.pub });
+      txBuilder.sender(authAccount.pub);
+      txBuilder.send({ address: otherAccount.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      txBuilder.send({ address: account1.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      txBuilder.send({ address: account2.pub, amount, mint: mintORCA, source: sourceORCA, multiSigners });
+      txBuilder.send({ address: account3.pub, amount, mint: mintUSDC, source: sourceUSDC, multiSigners });
+      txBuilder.send({ address: account4.pub, amount, mint: mintUSDC, source: sourceUSDC, multiSigners });
+      txBuilder.send({ address: account5.pub, amount, mint: mintUSDC, source: sourceUSDC, multiSigners });
+      txBuilder.memo(memo);
+      txBuilder.sign({ key: authAccount.prv });
+      const tx = await txBuilder.build();
+      tx.inputs.length.should.equal(6);
+      tx.inputs[0].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.inputs[1].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.inputs[2].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.inputs[3].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      tx.inputs[4].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      tx.inputs[5].should.deepEqual({
+        address: authAccount.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      tx.outputs.length.should.equal(6);
+      tx.outputs[0].should.deepEqual({
+        address: otherAccount.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs[1].should.deepEqual({
+        address: account1.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs[2].should.deepEqual({
+        address: account2.pub,
+        value: amount,
+        coin: 'tsol:ORCA',
+      });
+      tx.outputs[3].should.deepEqual({
+        address: account3.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      tx.outputs[4].should.deepEqual({
+        address: account4.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      tx.outputs[5].should.deepEqual({
+        address: account5.pub,
+        value: amount,
+        coin: 'tsol:USDC',
+      });
+      const rawTx = tx.toBroadcastFormat();
+      should.equal(Utils.isValidRawTransaction(rawTx), true);
+      should.equal(rawTx, testData.MULTI_TOKEN_TRANSFER_SIGNED);
     });
   });
-
   describe('Fail', () => {
     it('for invalid sender', () => {
       const txBuilder = transferBuilder();

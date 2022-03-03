@@ -1,4 +1,4 @@
-import { StakeInstruction, SystemInstruction, TransactionInstruction } from '@solana/web3.js';
+import { AccountMeta, Signer, StakeInstruction, SystemInstruction, TransactionInstruction } from '@solana/web3.js';
 
 import { TransactionType } from '../baseCoin';
 import { NotSupported } from '../baseCoin/errors';
@@ -23,6 +23,7 @@ import {
   StakingWithdraw,
 } from './iface';
 import { getInstructionType } from './utils';
+import { decodeTransferCheckedInstruction } from './tokenEncodeDecode';
 const splToken = require('@solana/spl-token');
 
 /**
@@ -117,7 +118,7 @@ function parseSendInstructions(instructions: TransactionInstruction[]): Array<No
         let transferInstruction;
         let isToken = false;
         try {
-          transferInstruction = splToken.decodeTransferCheckedInstruction(instruction, splToken.TOKEN_PROGRAM_ID);
+          transferInstruction = decodeTransferCheckedInstruction(instruction, splToken.TOKEN_PROGRAM_ID);
           isToken = true;
         } catch (e) {
           transferInstruction = SystemInstruction.decodeTransfer(instruction);
@@ -127,11 +128,11 @@ function parseSendInstructions(instructions: TransactionInstruction[]): Array<No
           transfer = {
             type: InstructionBuilderTypes.Transfer,
             params: {
-              fromAddress: transferInstruction.keys.owner.toString(),
-              toAddress: transferInstruction.keys.destination.toString(),
+              fromAddress: transferInstruction.keys.owner.pubkey.toString(), // FIX : accountMeta returned??
+              toAddress: transferInstruction.keys.destination.pubkey.toString(),
               amount: transferInstruction.data.amount.toString(),
-              mint: transferInstruction.keys.mint.toString(),
-              source: transferInstruction.keys.source.toString(),
+              mint: transferInstruction.keys.mint.pubkey.toString(),
+              source: transferInstruction.keys.source.pubkey.toString(),
               multiSigners: transferInstruction.keys.multiSigners,
             },
           };

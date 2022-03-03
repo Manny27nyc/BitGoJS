@@ -1,5 +1,4 @@
 import {
-  AccountMeta,
   Blockhash,
   StakeInstructionType,
   SystemInstructionType,
@@ -64,7 +63,7 @@ export interface Transfer {
     amount: string;
     mint?: string;
     source?: string;
-    multiSigners?: Array<AccountMeta>;
+    multiSigners?: Array<Signer>;
   };
 }
 

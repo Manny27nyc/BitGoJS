@@ -13,8 +13,8 @@ describe('Token Encode Decode Methods', () => {
   const nonceAccount = new KeyPair(testData.nonceAccount).getKeys();
 
   const amount = testData.tokenTransfers.amount;
-  const mint = new PublicKey(testData.tokenTransfers.mint);
-  const source = new PublicKey(testData.tokenTransfers.source);
+  const mint = new PublicKey(testData.tokenTransfers.mintUSDC);
+  const source = new PublicKey(testData.tokenTransfers.sourceUSDC);
   const multiSigners = testData.tokenTransfers.multiSigners;
   const decimals = testData.tokenTransfers.decimals;
   const owner = new PublicKey(authAccount.pub);
