@@ -76,6 +76,70 @@ describe('Instruction Parser Tests: ', function () {
       should.deepEqual(result, instructionsData);
     });
 
+    it('Send token tx instructions', () => {
+      const authAccount = testData.authAccount.pub;
+      const nonceAccount = testData.nonceAccount.pub;
+      const amount = testData.tokenTransfers.amount.toString();
+      const memo = testData.tokenTransfers.memo;
+      const decimals = testData.tokenTransfers.decimals;
+      const mintORCA = testData.tokenTransfers.mintORCA;
+      const sourceORCA = testData.tokenTransfers.sourceORCA;
+      const multiSigners = testData.tokenTransfers.multiSigners;
+
+      // nonce
+      const nonceAdvanceParams: InstructionParams = {
+        type: InstructionBuilderTypes.NonceAdvance,
+        params: { walletNonceAddress: nonceAccount, authWalletAddress: authAccount },
+      };
+      const nonceAdvanceInstruction = SystemProgram.nonceAdvance({
+        noncePubkey: new PublicKey(nonceAccount),
+        authorizedPubkey: new PublicKey(authAccount),
+      });
+
+      // transfer
+      const transferParams = {
+        type: InstructionBuilderTypes.Transfer,
+        params: {
+          fromAddress: authAccount,
+          toAddress: nonceAccount,
+          amount,
+          mint: mintORCA,
+          multiSigners: [
+            { pubkey: multiSigners[0].publicKey, isSigner: true, isWritable: false },
+            { pubkey: multiSigners[1].publicKey, isSigner: true, isWritable: false },
+          ],
+          source: sourceORCA,
+        },
+      };
+      const transferInstruction = splToken.Token.createTransferCheckedInstruction(
+        splToken.TOKEN_PROGRAM_ID,
+        new PublicKey(sourceORCA),
+        new PublicKey(mintORCA),
+        new PublicKey(nonceAccount),
+        new PublicKey(authAccount),
+        multiSigners,
+        amount,
+        decimals,
+      );
+
+      // memo
+      const memoParams: InstructionParams = {
+        type: InstructionBuilderTypes.Memo,
+        params: { memo },
+      };
+
+      const memoInstruction = new TransactionInstruction({
+        keys: [],
+        programId: new PublicKey(MEMO_PROGRAM_PK),
+        data: Buffer.from(memo),
+      });
+
+      const instructions = [nonceAdvanceInstruction, transferInstruction, memoInstruction];
+      const instructionsData = [nonceAdvanceParams, transferParams, memoParams];
+      const result = instructionParamsFactory(TransactionType.Send, instructions);
+      should.deepEqual(result, instructionsData);
+    });
+
     it('ATA init tx instructions', () => {
       const mintAddress = testData.associatedTokenAccounts.mintId;
       const ownerAddress = testData.associatedTokenAccounts.accounts[0].pub;
