@@ -593,7 +593,7 @@ describe('Casper', function () {
       ];
 
       for (const address of invalidAddresses) {
-        should.throws(() => basecoin.verifyAddress(address));
+        should.throws(() => basecoin.isWalletAddress(address));
       }
     });
 
@@ -618,7 +618,24 @@ describe('Casper', function () {
       ];
 
       for (const addressParams of validAddresses) {
-        basecoin.verifyAddress(addressParams).should.be.true();
+        basecoin.isWalletAddress(addressParams).should.be.true();
+      }
+    });
+
+    it('should verify not matching base address', function () {
+      const validAddresses = [
+        {
+          address: '0203DC13CBBF29765C7745578D9E091280522F37684EF0E400B86B1C409BC454F1F3',
+          rootAddress: '0203DC13CBBF29765C7745578D9E091280522F37684EF0E400B86B1C409BC454F1F2',
+        },
+        {
+          address: '0203DC13CBBF29765C7745578D9E091280522F37684EF0E400B86B1C409BC454F1F2?transferId=0',
+          rootAddress: '0203DC13CBBF29765C7745578D9E091280522F37684EF0E400B86B1C409BC454F1F3',
+        },
+      ];
+
+      for (const addressParams of validAddresses) {
+        basecoin.isWalletAddress(addressParams).should.be.false();
       }
     });
   });

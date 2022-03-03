@@ -11,7 +11,7 @@ import {
   ParseTransactionOptions,
   SignedTransaction,
   SignTransactionOptions,
-  VerifyAddressOptions,
+  VerifyAddressOptions as BaseVerifyAddressOptions,
   VerifyTransactionOptions,
   TransactionFee,
   TransactionRecipient as Recipient,
@@ -23,6 +23,7 @@ import { BitGo } from '../../bitgo';
 import { InvalidAddressError, InvalidMemoIdError, MethodNotImplementedError } from '../../errors';
 import * as stellar from 'stellar-sdk';
 import { SeedValidator } from '../internal/seedValidator';
+import { isSameBaseAddress } from './address';
 
 export interface HbarSignTransactionOptions extends SignTransactionOptions {
   txPrebuild: TransactionPrebuild;
@@ -58,6 +59,10 @@ export interface ExplainTransactionOptions {
 interface AddressDetails {
   address: string;
   memoId?: string;
+}
+
+interface VerifyAddressOptions extends BaseVerifyAddressOptions {
+  baseAddress: string;
 }
 
 export class Hbar extends BaseCoin {
@@ -145,8 +150,21 @@ export class Hbar extends BaseCoin {
     return {};
   }
 
+  /**
+   * Check if address is valid, then make sure it matches the base address.
+   *
+   * @param {VerifyAddressOptions} params
+   * @param {String} params.address - the address to verify
+   * @param {String} params.baseAddress - the base address from the wallet
+   */
   isWalletAddress(params: VerifyAddressOptions): boolean {
-    throw new MethodNotImplementedError();
+    const { address, baseAddress } = params;
+    return isSameBaseAddress(this, address, baseAddress);
+  }
+
+  getBaseAddress(address: string): string {
+    const addressDetails = this.getAddressDetails(address);
+    return addressDetails.address;
   }
 
   async verifyTransaction(params: VerifyTransactionOptions): Promise<boolean> {

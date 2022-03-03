@@ -604,4 +604,14 @@ export abstract class BaseCoin {
   async getSignablePayload(serializedTx: string): Promise<Buffer> {
     return Buffer.from(serializedTx);
   }
+
+  /**
+   * Returns the base address portion of an address
+   *
+   * @param {String} address - an address
+   * @returns {String} - the base address
+   */
+  getBaseAddress(address: string): string {
+    return address;
+  }
 }

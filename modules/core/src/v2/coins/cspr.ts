@@ -20,7 +20,8 @@ import {
 
 import { BitGo } from '../../bitgo';
 import { BaseCoin as StaticsBaseCoin, CoinFamily } from '@bitgo/statics';
-import { InvalidAddressError, InvalidTransactionError, UnexpectedAddressError } from '../../errors';
+import { InvalidTransactionError } from '../../errors';
+import { isSameBaseAddress } from './address';
 
 interface SignTransactionOptions extends BaseSignTransactionOptions {
   txPrebuild: TransactionPrebuild;
@@ -103,22 +104,18 @@ export class Cspr extends BaseCoin {
   /**
    * Check if address is valid, then make sure it matches the root address.
    *
-   * @param {VerifyAddressOptions} params address and rootAddress to verify
+   * @param {VerifyAddressOptions} params
+   * @param {String} params.address - the address to verify
+   * @param {String} params.rootAddress - the root address from the wallet
    */
   isWalletAddress(params: VerifyAddressOptions): boolean {
     const { address, rootAddress } = params;
-    if (!this.isValidAddress(address)) {
-      throw new InvalidAddressError(`invalid address: ${address}`);
-    }
+    return isSameBaseAddress(this, address, rootAddress);
+  }
 
+  getBaseAddress(address: string): string {
     const addressDetails = accountLib.Cspr.Utils.getAddressDetails(address);
-    const rootAddressDetails = accountLib.Cspr.Utils.getAddressDetails(rootAddress);
-    if (addressDetails.address !== rootAddressDetails.address) {
-      throw new UnexpectedAddressError(
-        `address validation failure: ${addressDetails.address} vs ${rootAddressDetails.address}`
-      );
-    }
-    return true;
+    return addressDetails.address;
   }
 
   /**

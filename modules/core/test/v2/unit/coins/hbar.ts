@@ -1,9 +1,9 @@
-import { Hbar } from '../../../../src/v2/coins/';
 import * as accountLib from '@bitgo/account-lib';
-
 import { TestBitGo } from '../../../lib/test_bitgo';
 import { rawTransactionForExplain } from '../../fixtures/coins/hbar';
 import { randomBytes } from 'crypto';
+import { Hbar } from '../../../../src/v2/coins/';
+import * as should from 'should';
 
 describe('Hedera Hashgraph:', function () {
   let bitgo;
@@ -72,6 +72,19 @@ describe('Hedera Hashgraph:', function () {
     explain.outputs[0].memo.should.equal('1');
     explain.fee.fee.should.equal(1160407);
     explain.changeAmount.should.equal('0');
+  });
+
+  it('should verify isWalletAddress', function () {
+    const baseAddress = '0.0.41098';
+    const validAddress1 = '0.0.41098?memoId=1';
+    const validAddress2 = '0.0.41098?memoId=2';
+    const unrelatedValidAddress = '0.1.41098?memoId=1';
+    const invalidAddress = '0.0.0.a';
+    basecoin.isWalletAddress({ address: validAddress1, baseAddress }).should.true();
+    basecoin.isWalletAddress({ address: validAddress2, baseAddress }).should.true();
+    basecoin.isWalletAddress({ address: validAddress2, baseAddress: validAddress1 }).should.true();
+    basecoin.isWalletAddress({ address: unrelatedValidAddress, baseAddress }).should.false();
+    should.throws(() => basecoin.isWalletAddress({ address: invalidAddress, baseAddress }), `invalid address: ${invalidAddress}`);
   });
 
   describe('Keypairs:', () => {
