@@ -360,6 +360,7 @@ export enum UnderlyingAsset {
   GDT = 'gdt',
   GEC = 'gec',
   GEN = 'gen',
+  GETH = 'geth',
   GHUB = 'ghub',
   GIGDROP = 'gigdrop',
   GLDX = 'gldx',

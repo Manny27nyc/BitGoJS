@@ -1119,6 +1119,7 @@ export const coins = CoinMap.fromCoins([
   terc20('tdai', 'Test DAI', 18, '0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa', UnderlyingAsset.TERC20),
   terc20('trif', 'Test RIF Token', 18, '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe', UnderlyingAsset.RIF),
   tceloToken('tcusd', 'Test Celo USD Token', 18, '0x874069fa1eb16d44d622f2e0ca25eea172369bc1', UnderlyingAsset.CUSD),
+  tofcerc20('ofcgeth', 'Test GETH Token', 18, UnderlyingAsset.GETH),
   tofcerc20('ofcterc', 'Test ERC Token', 0, UnderlyingAsset.TERC),
   tofcerc20('ofctest', 'Test Mintable ERC20 Token', 18, UnderlyingAsset.TEST),
   tstellarToken(
