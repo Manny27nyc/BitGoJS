@@ -6,6 +6,7 @@
     "target": "es5",
     "strictPropertyInitialization": false,
     "esModuleInterop": true,
+    "composite": true,
     "typeRoots": [
       "./types",
       "../../types",
